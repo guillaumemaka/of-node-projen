@@ -3,7 +3,6 @@
 /.versionrc.json
 /coverage
 /test
-/.mergify.yml
 /src
 dist
 /tsconfig.json
@@ -12,7 +11,6 @@ dist
 /.idea
 /.projenrc.js
 /tsconfig.jest.json
-/.eslintrc.json
 !/lib
 !/lib/**/*.js
 !/lib/**/*.d.ts

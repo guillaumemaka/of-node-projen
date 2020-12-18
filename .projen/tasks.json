@@ -23,9 +23,6 @@
         },
         {
           "exec": "jest --passWithNoTests --all --updateSnapshot"
-        },
-        {
-          "spawn": "eslint"
         }
       ]
     },
@@ -59,13 +56,13 @@
     "release": {
       "name": "release",
       "category": "20.release",
-      "description": "Bumps version & push to master",
+      "description": "Bumps version & push to main",
       "steps": [
         {
           "spawn": "bump"
         },
         {
-          "exec": "git push --follow-tags origin master"
+          "exec": "git push --follow-tags origin main"
         }
       ],
       "condition": "! git log --oneline -1 | grep -q \"chore(release):\""
@@ -120,16 +117,6 @@
       "steps": [
         {
           "exec": "jsii-pacmak"
-        }
-      ]
-    },
-    "eslint": {
-      "name": "eslint",
-      "category": "10.test",
-      "description": "Runs eslint against the codebase",
-      "steps": [
-        {
-          "exec": "eslint --ext .ts,.tsx --fix --no-error-on-unmatched-pattern src test .projenrc.js"
         }
       ]
     },
