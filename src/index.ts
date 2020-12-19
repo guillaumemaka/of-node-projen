@@ -51,8 +51,8 @@ export class OpenFaasNodeProject extends NodeProject {
     this.options = Object.assign(options, defaultOptions);
 
     this.funcDir = this.options.funcDir
-      ? path.join(this.outdir, this.options.funcDir)
-      : path.join(this.outdir, 'function');
+      ? path.join(this.root.outdir, this.options.funcDir)
+      : path.join(this.root.outdir, 'function');
 
     if (!fs.pathExistsSync(this.funcDir)) {
       fs.mkdirSync(this.funcDir);
@@ -83,7 +83,7 @@ export class OpenFaasNodeProject extends NodeProject {
     this.funcManifest.devDependencies = this.funcDevDeps;
     this.funcManifest.peerDependencies = this.funcPeerDeps;
 
-    new JsonFile(this, this.funcDir, {
+    new JsonFile(this, path.join(this.funcDir, 'package.json'), {
       obj: this.funcManifest,
       readonly: false,
     });
@@ -101,14 +101,11 @@ how you want to execute them.
     `,
     };
 
-    const dockerIgnore = new IgnoreFile(
-      this,
-      path.join(this.outdir, '.dockerignore'),
-    );
+    const dockerIgnore = new IgnoreFile(this, '.dockerignore');
 
     dockerIgnore.exclude('*/node_modules');
 
-    new YamlFile(this, path.join(this.outdir, 'template.yml'), {
+    new YamlFile(this, 'template.yml', {
       obj: templateManifest,
       readonly: false,
     });
@@ -178,11 +175,7 @@ class Dockerfile extends Component {
   }
 
   synthesize() {
-    if (
-      fs
-        .readdirSync(this.project.outdir)
-        .filter((x) => x.localeCompare('Dockerfile'))
-    ) {
+    if (fs.pathExistsSync(path.join(this.project.outdir, 'Dockerfile'))) {
       return;
     }
 
@@ -256,7 +249,7 @@ CMD ["fwatchdog"]
 
     `;
 
-    fs.writeFileSync(path.join(this.project.outdir), dockerfile);
+    fs.writeFileSync(path.join(this.project.outdir, 'Dockerfile'), dockerfile);
   }
 }
 
@@ -274,10 +267,7 @@ class FunctionCode extends Component {
   }
 
   synthesize() {
-    if (
-      fs.pathExistsSync(this.funcDir) &&
-      fs.readdirSync(this.funcDir).filter((x) => x.endsWith('.js'))
-    ) {
+    if (fs.pathExistsSync(this.funcDir + '/' + this.handler)) {
       return;
     }
 
@@ -306,13 +296,13 @@ class IndexCode extends Component {
   }
 
   synthesize() {
-    if (
-      fs
-        .readdirSync(this.project.outdir)
-        .filter((x) => x.localeCompare('index.js'))
-    ) {
-      return;
-    }
+    // if (
+    //   fs
+    //     .readdirSync(this.project.root.outdir)
+    //     .filter((x) => x.endsWith('index.js'))
+    // ) {
+    //   return;
+    // }
 
     const functionCode = `
 // Copyright (c) Alex Ellis 2017. All rights reserved.

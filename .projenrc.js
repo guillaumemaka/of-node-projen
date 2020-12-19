@@ -4,8 +4,7 @@ const project = new JsiiProject({
   authorAddress: 'guillaume.maka@gmail.com',
   authorName: 'Guillaume Maka',
   name: 'openfaas-node12-projen',
-  repository:
-    'https://github.com/guillaume.maka@gmail.com/openfaas-node12-projen.git',
+  repository: 'https://github.com/guillaumemaka/of-node-projen.git',
 
   entrypoint: 'lib/index.js',
   devDeps: ['@types/fs-extra@^8'], // This will break if it's on 9
