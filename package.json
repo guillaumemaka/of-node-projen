@@ -57,12 +57,12 @@
   "license": "Apache-2.0",
   "version": "0.0.2",
   "jest": {
+    "coveragePathIgnorePatterns": [
+      "test/util.ts"
+    ],
     "clearMocks": true,
     "collectCoverage": true,
     "coverageDirectory": "coverage",
-    "coveragePathIgnorePatterns": [
-      "/node_modules/"
-    ],
     "testPathIgnorePatterns": [
       "/node_modules/"
     ],

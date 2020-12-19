@@ -3,7 +3,6 @@ import {
   NodeProjectOptions,
   NodeProject,
   Semver,
-  JsonFile,
   Component,
   Project,
   YamlFile,
@@ -51,12 +50,8 @@ export class OpenFaasNodeProject extends NodeProject {
     this.options = Object.assign(options, defaultOptions);
 
     this.funcDir = this.options.funcDir
-      ? path.join(this.root.outdir, this.options.funcDir)
-      : path.join(this.root.outdir, 'function');
-
-    if (!fs.pathExistsSync(this.funcDir)) {
-      fs.mkdirSync(this.funcDir);
-    }
+      ? path.join(this.outdir, this.options.funcDir)
+      : path.join(this.outdir, 'function');
 
     this.funcHandler = this.options.funcHandler || 'handler.js';
 
@@ -83,11 +78,6 @@ export class OpenFaasNodeProject extends NodeProject {
     this.funcManifest.devDependencies = this.funcDevDeps;
     this.funcManifest.peerDependencies = this.funcPeerDeps;
 
-    new JsonFile(this, path.join(this.funcDir, 'package.json'), {
-      obj: this.funcManifest,
-      readonly: false,
-    });
-
     const templateManifest = {
       language: 'node12',
       fprocess: `node ${this.funcHandler}`,
@@ -109,9 +99,19 @@ how you want to execute them.
       obj: templateManifest,
       readonly: false,
     });
+
+    new FunctionManifest(this, this.funcDir, this.funcManifest);
     new FunctionCode(this, this.funcDir, this.funcHandler);
     new IndexCode(this);
     new Dockerfile(this, { tag: this.options.ofWatchDogDockerImageTag! });
+  }
+
+  preSynthesize() {
+    super.preSynthesize();
+
+    if (!fs.pathExistsSync(this.funcDir)) {
+      fs.mkdirSync(this.funcDir);
+    }
   }
 
   /**
@@ -158,7 +158,7 @@ how you want to execute them.
   _loadDeps(...dependencies: string[]): Record<string, Semver> {
     return sorted(dependencies)()
       .map(parseDep)
-      .reduce((acc, prev: Record<string, Semver>) => {
+      .reduce((acc: any, prev: Record<string, string>) => {
         return { ...acc, ...prev };
       }, {});
   }
@@ -253,6 +253,24 @@ CMD ["fwatchdog"]
   }
 }
 
+class FunctionManifest extends Component {
+  private readonly manifest: any;
+  private readonly funcDir: string;
+  constructor(project: Project, funcDir: string, manifest: any) {
+    super(project);
+    this.manifest = manifest;
+    this.funcDir = funcDir;
+  }
+
+  synthesize() {
+    fs.writeFileSync(
+      path.join(this.funcDir, 'package.json'),
+      JSON.stringify(this.manifest),
+      { encoding: 'utf8' },
+    );
+  }
+}
+
 class FunctionCode extends Component {
   private readonly funcDir: string;
   private readonly handler: string;
@@ -296,13 +314,9 @@ class IndexCode extends Component {
   }
 
   synthesize() {
-    // if (
-    //   fs
-    //     .readdirSync(this.project.root.outdir)
-    //     .filter((x) => x.endsWith('index.js'))
-    // ) {
-    //   return;
-    // }
+    if (fs.pathExistsSync(path.join(this.project.outdir, 'index.js'))) {
+      return;
+    }
 
     const functionCode = `
 // Copyright (c) Alex Ellis 2017. All rights reserved.
@@ -311,10 +325,10 @@ class IndexCode extends Component {
 
 "use strict"
 
-const express = require('express')
-const app = express()
+const express = require('express');
+const app = express();
 const handler = require('./function/handler');
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
 
 if (process.env.RAW_BODY === 'true') {
     app.use(bodyParser.raw({ type: '*/*' }))
@@ -449,7 +463,7 @@ function sorted<T>(toSort: T) {
   };
 }
 
-function parseDep(dep: string): Record<string, Semver> {
+function parseDep(dep: string): Record<string, string> {
   const scope = dep.startsWith('@');
   if (scope) {
     dep = dep.substr(1);
@@ -457,5 +471,5 @@ function parseDep(dep: string): Record<string, Semver> {
 
   const [name, version] = dep.split('@');
   let depname = scope ? `@${name}` : name;
-  return { [depname]: Semver.of(version ?? '*') };
+  return { [depname]: version ?? 'latest' };
 }

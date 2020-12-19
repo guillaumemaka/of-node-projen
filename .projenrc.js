@@ -17,6 +17,11 @@ const project = new JsiiProject({
   defaultReleaseBranch: 'main',
   releaseBranches: ['main'],
   // codeCov: true                                                         /* The parent project, if this project is part of a bigger project. */
+  jestOptions: {
+    jestConfig: {
+      coveragePathIgnorePatterns: ['test/util.ts'],
+    },
+  },
 });
 
 project.synth();
