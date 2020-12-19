@@ -112,6 +112,21 @@ new OpenFaasNodeProject(options: OpenFaasFunctionOptions)
   * **ofWatchDogDockerImageTag** (<code>string</code>)  *No description* __*Default*__: 0.7.2
 
 
+### Methods
+
+
+#### preSynthesize() <a id="openfaas-node12-projen-openfaasnodeproject-presynthesize"></a>
+
+(experimental) Called before all components are synthesized.
+
+```ts
+preSynthesize(): void
+```
+
+
+
+
+
 
 
 ## struct OpenFaasFunctionOptions  <a id="openfaas-node12-projen-openfaasfunctionoptions"></a>
